@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shoot Day">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23000' width='100' height='100' rx='20'/><text x='50' y='62' text-anchor='middle' font-size='40' fill='%23e8a317'>JN</text></svg>">
+<title>Shoot Day</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:#000;color:#e0e0e0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+
+  .app{max-width:540px;margin:0 auto;padding:16px 16px 110px}
+
+  /* HEADER */
+  .hdr{text-align:center;padding:20px 0 14px}
+  .hdr h1{font-size:14px;font-weight:800;color:#fff;letter-spacing:4px;text-transform:uppercase}
+  .hdr-line{width:28px;height:2px;background:#e8a317;margin:7px auto 5px;border-radius:2px}
+  .hdr p{font-size:10px;color:#333;font-weight:600}
+
+  /* TABS */
+  .tabs{display:flex;gap:4px;margin-bottom:18px;background:#0a0a0a;border-radius:10px;padding:3px;border:1px solid #111}
+  .tab{flex:1;text-align:center;padding:9px 0;font-size:11px;font-weight:700;color:#444;border-radius:8px;cursor:pointer;transition:all .2s;letter-spacing:.3px}
+  .tab.active{background:#fff;color:#000}
+  .tab .tab-count{font-size:9px;opacity:.5;margin-left:3px}
+
+  /* PROGRESS */
+  .prog{background:#0a0a0a;border:1px solid #111;border-radius:12px;padding:12px 14px;margin-bottom:18px;position:sticky;top:0;z-index:90;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+  .prog-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .prog-num{font-size:26px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1}
+  .prog-num span{font-size:13px;color:#333;font-weight:600}
+  .prog-time{font-size:10px;color:#333;font-weight:600}
+  .prog-track{background:#111;border-radius:3px;height:3px;overflow:hidden}
+  .prog-fill{background:#fff;height:100%;border-radius:3px;width:0%;transition:width .4s cubic-bezier(.4,0,.2,1)}
+
+  /* AD FORMAT REMINDER */
+  .format-bar{display:flex;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px}
+  .format-pill{flex-shrink:0;background:#0a0a0a;border:1px solid #141414;border-radius:8px;padding:8px 12px;text-align:center}
+  .format-pill .fp-label{font-size:8px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:.5px}
+  .format-pill .fp-val{font-size:12px;font-weight:800;color:#e8a317;margin-top:1px}
+
+  /* PAGES */
+  .page{display:none}
+  .page.active{display:block}
+
+  /* SECTIONS */
+  .sec{margin-bottom:24px}
+  .sec-label{display:flex;align-items:center;gap:7px;margin-bottom:8px;padding-left:2px}
+  .sec-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .sec-name{font-size:10px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:1.5px}
+  .sec-cnt{font-size:9px;color:#222;font-weight:600;margin-left:auto}
+  .sec-note{font-size:10px;color:#1a1a1a;margin-bottom:10px;padding-left:14px;font-weight:500;line-height:1.5}
+
+  /* LINE CARDS */
+  .lc{background:#0a0a0a;border:1px solid #111;border-radius:10px;padding:12px 13px;margin-bottom:5px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);display:flex;align-items:flex-start;gap:10px}
+  .lc:active{transform:scale(.98)}
+  .lc.done{opacity:.18}
+  .lc.done .ring{background:#fff;border-color:#fff}
+  .lc.done .ring::after{content:'';width:5px;height:5px;background:#000;border-radius:50%}
+  .ring{width:18px;height:18px;min-width:18px;border:1.5px solid #1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-top:2px;transition:all .2s}
+  .lc-body{flex:1}
+  .lc-tags{display:flex;align-items:center;gap:4px;margin-bottom:4px;flex-wrap:wrap}
+  .t{font-size:8px;font-weight:700;padding:1.5px 6px;border-radius:3px;letter-spacing:.3px;text-transform:uppercase}
+  .t-id{background:none;color:#222;padding:0;font-size:8px}
+  .t-time{background:#0a0a0a;color:#444;border:1px solid #151515}
+  .t-cam{background:#ef444410;color:#f87171;border:1px solid #ef444418}
+  .t-es{background:#f9731610;color:#fb923c;border:1px solid #f9731620}
+  .t-iron{background:#e8a31710;color:#e8a317;border:1px solid #e8a31720}
+  .t-a{background:none;color:#222;padding:0;font-size:8px;font-weight:500}
+  .lc-text{font-size:15px;font-weight:400;color:#e8e8e8;line-height:1.5;-webkit-user-select:text;user-select:text}
+  .lc-tip{font-size:9px;color:#1a1a1a;margin-top:3px;font-weight:500}
+
+  .divider{height:1px;background:#080808;margin:6px 0 24px}
+
+  /* COMBOS */
+  .combo{background:#0a0a0a;border:1px solid #111;border-radius:10px;padding:14px;margin-bottom:8px}
+  .combo-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:1px}
+  .combo-sub{font-size:9px;color:#222;margin-bottom:10px;font-weight:500}
+  .combo-r{display:flex;align-items:center;gap:7px;padding:4px 0;font-size:11px;color:#555}
+  .combo-s{font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;min-width:40px;text-align:center;color:#fff;letter-spacing:.3px}
+  .combo-a{color:#111;font-size:10px}
+
+  /* FAB + DRAWER */
+  .fab{position:fixed;bottom:22px;right:18px;width:48px;height:48px;background:#fff;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:200;box-shadow:0 4px 20px #00000066;transition:all .2s}
+  .fab:active{transform:scale(.9)}
+  .fab svg{width:20px;height:20px;fill:none;stroke:#000;stroke-width:2;stroke-linecap:round}
+  .fab-lbl{position:fixed;bottom:30px;right:72px;font-size:10px;font-weight:600;color:#333;z-index:200;pointer-events:none;opacity:1;transition:opacity .3s}
+  .fab-lbl.hid{opacity:0}
+
+  .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000c;z-index:300;opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .overlay.open{opacity:1;pointer-events:all}
+
+  .drawer{position:fixed;bottom:0;left:0;right:0;background:#0a0a0a;border-top-left-radius:18px;border-top-right-radius:18px;z-index:400;max-height:70vh;overflow-y:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding:0 16px 28px}
+  .drawer.open{transform:translateY(0)}
+  .drawer-handle{width:32px;height:3px;background:#1a1a1a;border-radius:3px;margin:9px auto 14px}
+  .drawer-title{font-size:12px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px}
+  .drawer-desc{font-size:10px;color:#333;margin-bottom:14px;line-height:1.5}
+  .drawer-sub{font-size:9px;font-weight:700;color:#222;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px}
+
+  .vc{background:#111;border:1px solid #151515;border-radius:8px;padding:10px 12px;margin-bottom:4px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:9px}
+  .vc:active{transform:scale(.98)}
+  .vc.vd{opacity:.18}
+  .vc.vd .vr{background:#fff;border-color:#fff}
+  .vc.vd .vr::after{content:'';width:4px;height:4px;background:#0a0a0a;border-radius:50%}
+  .vr{width:16px;height:16px;min-width:16px;border:1.5px solid #1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .vc-text{font-size:12px;font-weight:500;color:#bbb;line-height:1.3}
+  .vc-sub{font-size:9px;color:#222;margin-top:1px;font-weight:500}
+
+  .reset{display:block;margin:28px auto 0;background:none;border:1px solid #0a0a0a;color:#222;padding:7px 18px;border-radius:6px;font-size:10px;cursor:pointer;font-weight:600}
+  .reset:hover{border-color:#ef4444;color:#ef4444}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <h1>Shoot Day</h1>
+  <div class="hdr-line"></div>
+  <p>JN Ornamental &middot; Iron Fence Ads &middot; Houston TX</p>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('main',this)">Main<span class="tab-count">35</span></div>
+  <div class="tab" onclick="switchTab('bank',this)">Backup Bank<span class="tab-count">21</span></div>
+  <div class="tab" onclick="switchTab('combos',this)">Build Guide</div>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog">
+  <div class="prog-row">
+    <div class="prog-num" id="pNum">0<span> / 35</span></div>
+    <div class="prog-time" id="pTime">~40 min</div>
+  </div>
+  <div class="prog-track"><div class="prog-fill" id="pFill"></div></div>
+</div>
+
+<!-- FORMAT REMINDER -->
+<div class="format-bar">
+  <div class="format-pill"><div class="fp-label">Ad 1 Testimonial</div><div class="fp-val">15–20 sec</div></div>
+  <div class="format-pill"><div class="fp-label">Ad 2 Walkthrough</div><div class="fp-val">20–25 sec</div></div>
+  <div class="format-pill"><div class="fp-label">Hook Rate Target</div><div class="fp-val">30%+</div></div>
+  <div class="format-pill"><div class="fp-label">Cut Every</div><div class="fp-val">2–3 sec</div></div>
+  <div class="format-pill"><div class="fp-label">Lead With</div><div class="fp-val">Iron</div></div>
+</div>
+
+<!-- ===================== MAIN PAGE ===================== -->
+<div class="page active" id="page-main">
+
+<!-- HOOKS -->
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#ef4444"></div><div class="sec-name">Hooks — Their Property, Their Life</div><div class="sec-cnt">12</div></div>
+  <div class="sec-note">ON CAMERA. Eyes on lens. Calm and confident. He is talking to one homeowner, not an audience. 2-3 takes each.</div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H1</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"You know that house on your street with the iron fence that just makes the whole property look different? I build those."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H2</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">yard</span></div><div class="lc-text">"If you pull up to your house every day and that fence bothers you... let me fix that."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H3</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">old fence</span></div><div class="lc-text">"That old fence leaning in your yard? It is not getting better on its own. Let me show you what we can do."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H4</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">putting it off</span></div><div class="lc-text">"You have been thinking about getting a new fence for how long now? Six months? A year? Let me make it easy."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H5</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"Most fence companies sell you panels off a truck. I weld your iron fence by hand. There is a big difference."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H6</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">safety</span></div><div class="lc-text">"If your kids or your dog cannot use the backyard because your fence is not right... that is what I fix."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H7</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">privacy</span></div><div class="lc-text">"If your neighbors can see your whole backyard right now, you already know why you are watching this."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H8</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"I build custom iron fences by hand right here in Houston. Let me show you what that actually looks like."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H9</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">cost</span></div><div class="lc-text">"You probably think a custom iron fence costs way more than it does. Let me show you what it actually runs."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H10</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">direct</span></div><div class="lc-text">"You need a fence. I build fences. Let me show you how we do it."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H11</span><span class="t t-time">3s</span><span class="t t-es">es</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Si tu cerca ya se esta cayendo o tu propiedad necesita algo mejor, esto es para ti."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">H12</span><span class="t t-time">3s</span><span class="t t-es">es</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Yo hago cercas de hierro a mano aqui en Houston. Dejame ensenarte como queda."</div></div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- IDENTITY -->
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#e8a317"></div><div class="sec-name">JN Ornamental — Who We Are (5-7 sec)</div><div class="sec-cnt">5</div></div>
+  <div class="sec-note">Right after the hook. Quick — who they are, what makes them different. Not a bio. Just the facts. ON CAMERA first sentence, then cut to welding or walking a fence.</div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">I1</span><span class="t t-time">5s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"I am Juan with JN Ornamental here in North Houston. We build custom iron fences from scratch — not from a box, not from a catalog. From raw steel."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">I2</span><span class="t t-time">5s</span><span class="t t-cam">on cam</span></div><div class="lc-text">"With us it is real simple. You call, I pick up. I come out, walk your yard with you, and we build your fence. The owner is the one who shows up."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">I3</span><span class="t t-time">5s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"When you call JN Ornamental, you are not talking to a sales team. You are talking to the owner. And I am the same guy who comes out and walks your yard."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">I4</span><span class="t t-time">4s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"Everything we build is welded by hand for your specific property. That is why no two fences we make look the same."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">I5</span><span class="t t-time">6s</span><span class="t t-es">es</span></div><div class="lc-text">"Soy Juan con JN Ornamental aqui en el norte de Houston. Cuando nos llamas, yo contesto. Y yo construyo tu cerca con mis propias manos."</div></div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- MEAT -->
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#3b82f6"></div><div class="sec-name">The Work — Iron, Craft, Results (B-Roll)</div><div class="sec-cnt">8</div></div>
+  <div class="sec-note">Voice over build footage. Fast cuts every 2-3 sec — welding sparks, grinding, measuring, iron details, finished gates. Juan can read from phone. This is the heart of Ad 2.</div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W1</span><span class="t t-time">5s</span><span class="t t-iron">iron</span></div><div class="lc-text">"A good iron fence completely changes how your property looks from the street. It is the first thing people notice when they pull up."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W2</span><span class="t t-time">5s</span><span class="t t-iron">iron</span></div><div class="lc-text">"Most companies order prefab panels and bolt them together. We start with raw steel and weld every piece by hand. You can see the difference."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W3</span><span class="t t-time">4s</span><span class="t t-iron">iron</span></div><div class="lc-text">"When we build your fence, it is designed for your property. Your measurements. Your style. Your gates where you want them."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W4</span><span class="t t-time">4s</span><span class="t t-iron">iron</span></div><div class="lc-text">"Iron does not lean over in two years. It does not rot. A good iron fence outlasts everything else on your property."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W5</span><span class="t t-time">5s</span><span class="t t-a">craft</span></div><div class="lc-text">"We walk your entire yard with you before we build anything. We plan it together — where the gates go, the height, what style fits your house. Then we go build exactly that."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W6</span><span class="t t-time">4s</span><span class="t t-a">result</span></div><div class="lc-text">"We finish a job and the homeowner walks out and just stands there looking at it. That is the reaction we work for."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W7</span><span class="t t-time">4s</span><span class="t t-a">trust</span></div><div class="lc-text">"Every fence we build, we build it like it is going on our own property. If we would not put it in front of our house, we are not putting it in front of yours."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">W8</span><span class="t t-time">5s</span><span class="t t-es">es</span></div><div class="lc-text">"Nosotros trabajamos con hierro real. Soldamos cada pieza a mano para tu propiedad. No es algo de catalogo — es hecho a tu medida."</div></div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- STACK -->
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#22c55e"></div><div class="sec-name">What You Actually Get</div><div class="sec-cnt">5</div></div>
+  <div class="sec-note">Each line = one thing Juan does that most companies don't. Text overlays on screen. Can read from phone.</div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">S1</span><span class="t t-time">3s</span></div><div class="lc-text">"We come out to your property the same day you call. Not next week. Same day."</div><div class="lc-tip">Overlay: Same-Day Estimate</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">S2</span><span class="t t-time">5s</span></div><div class="lc-text">"We walk the whole yard with you. We figure out the right fence, the right height, where the gates should go, what your HOA needs. You are not just getting a price — you are getting a real plan."</div><div class="lc-tip">Overlay: Full Property Walkthrough</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">S3</span><span class="t t-time">4s</span></div><div class="lc-text">"Everything we build has a 1-year warranty on the work. If something is not right, we come back and fix it. That is on us."</div><div class="lc-tip">Overlay: 1-Year Warranty</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">S4</span><span class="t t-time">3s</span><span class="t t-iron">iron</span></div><div class="lc-text">"Iron, wood, chain link — whatever makes sense for your home and what you are trying to spend."</div><div class="lc-tip">Overlay: Custom Iron & Ornamental</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">S5</span><span class="t t-time">3s</span></div><div class="lc-text">"We give you a number right there. You are not waiting around for some email that takes five days."</div></div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- CLOSERS -->
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#ec4899"></div><div class="sec-name">Next Step — Relaxed but Direct</div><div class="sec-cnt">5</div></div>
+  <div class="sec-note">ON CAMERA. Juan back to lens. Relaxed energy, not hype. Last thing they hear. Overlays on screen.</div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">C1</span><span class="t t-time">5s</span><span class="t t-cam">on cam</span></div><div class="lc-text">"We are one crew. We take on maybe 4 or 5 jobs a month. Right now we have a couple spots open. Tap the link. It takes like 30 seconds. We call you back today."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">C2</span><span class="t t-time">4s</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Hit that button, fill out the short form, and we will give you a call back. Not next week — today."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">C3</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Link is right there. 30 seconds. We will hit you back today. Se habla espanol."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">C4</span><span class="t t-time">5s</span><span class="t t-cam">on cam</span></div><div class="lc-text">"If you are not sure, that is cool. We come out, walk your yard, give you a number. If it is not for you, you do not owe us a thing. Tap the link."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">C5</span><span class="t t-time">4s</span><span class="t t-es">es</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Solo tomamos 4 o 5 proyectos al mes. Ahorita nos quedan un par de espacios. Toca el link. Te llamamos hoy mismo."</div></div></div>
+</div>
+
+<button class="reset" onclick="resetAll()">Reset All</button>
+</div>
+
+<!-- ===================== BACKUP BANK ===================== -->
+<div class="page" id="page-bank">
+
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#ef4444"></div><div class="sec-name">Extra Hooks</div><div class="sec-cnt">8</div></div>
+  <div class="sec-note">Swap these in if Juan doesn't vibe with a main hook or you want more to test.</div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH1</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">new house</span></div><div class="lc-text">"Just bought a house in Houston? The fence is the thing that makes it feel like yours."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH2</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">HOA</span></div><div class="lc-text">"If your HOA already sent you that letter about your fence, this is your sign to handle it."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH3</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">cheap fence</span></div><div class="lc-text">"If you have seen cheap fences on your street leaning over after two years, you already know that is not what you want."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH4</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"There is a reason iron fences outlast everything else. Let me show you how I build them."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH5</span><span class="t t-time">4s</span><span class="t t-cam">on cam</span><span class="t t-a">property value</span></div><div class="lc-text">"Your home is the biggest investment you got. The fence out front should look like it belongs there."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH6</span><span class="t t-time">3s</span><span class="t t-cam">on cam</span><span class="t t-a">security</span></div><div class="lc-text">"You should feel safe in your own yard. If you do not right now, let me fix that."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH7</span><span class="t t-time">4s</span><span class="t t-cam">on cam</span><span class="t t-iron">iron</span></div><div class="lc-text">"People think custom iron is out of their budget. Most of the time they are surprised at what it actually costs."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XH8</span><span class="t t-time">3s</span><span class="t t-es">es</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Tu casa se merece una buena cerca. Yo la construyo a mano. Dejame ensenarte."</div></div></div>
+</div>
+
+<div class="divider"></div>
+
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#e8a317"></div><div class="sec-name">Extra Identity + Work</div><div class="sec-cnt">6</div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XB1</span><span class="t t-time">4s</span><span class="t t-iron">iron</span></div><div class="lc-text">"People ask why our iron fences look different. It is because we are not assembling parts. We are welding your fence from raw steel for your specific yard."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XB2</span><span class="t t-time">4s</span><span class="t t-a">small crew</span></div><div class="lc-text">"We are not a big company. It is a small crew. That is why every fence gets our full attention — we do not have 20 jobs going at once."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XB3</span><span class="t t-time">5s</span><span class="t t-iron">iron</span></div><div class="lc-text">"A prefab fence from a big box store lasts a few years. The iron fences we weld last decades. That is not a sales pitch, that is just how iron works."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XB4</span><span class="t t-time">4s</span><span class="t t-a">custom</span></div><div class="lc-text">"You tell us what you want — the style, the height, where the gates go — and we build exactly that. Nothing off the shelf."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XB5</span><span class="t t-time">4s</span><span class="t t-iron">iron</span></div><div class="lc-text">"The thing about iron is it makes your whole property look like you take care of it. That curb appeal is real."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XB6</span><span class="t t-time">5s</span><span class="t t-es">es</span></div><div class="lc-text">"Nosotros trabajamos con hierro de verdad — soldado a mano para tu propiedad. No es algo generico. Es hecho a tu medida y se nota la diferencia."</div></div></div>
+</div>
+
+<div class="divider"></div>
+
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#22c55e"></div><div class="sec-name">Extra Stack + Trust</div><div class="sec-cnt">4</div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XS1</span><span class="t t-time">4s</span></div><div class="lc-text">"From the moment you reach out to the moment you have a price — same day. From yes to finished fence — 2 to 3 weeks. Not months."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XS2</span><span class="t t-time">5s</span></div><div class="lc-text">"If we come out and it does not feel right, you do not owe us a thing. We shake hands and that is it. No weird follow-up calls. No pressure."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XS3</span><span class="t t-time">5s</span></div><div class="lc-text">"Once our schedule fills up, the next opening is usually 3 to 4 weeks out. That is just how it is with a small crew."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XS4</span><span class="t t-time">5s</span><span class="t t-es">es</span></div><div class="lc-text">"Si vengo a tu casa y no te sientes comodo, no me debes nada. Asi de simple. Sin presion. Sin compromiso."</div></div></div>
+</div>
+
+<div class="divider"></div>
+
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#ec4899"></div><div class="sec-name">Extra Closers</div><div class="sec-cnt">3</div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XC1</span><span class="t t-time">4s</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Right now we have a couple spots open this month. Once they are gone, they are gone. Tap the link."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XC2</span><span class="t t-time">4s</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Tap the link. Fill out the form. We will call you back today and figure out what makes sense for your property."</div></div></div>
+
+  <div class="lc" onclick="tog(this)"><div class="ring"></div><div class="lc-body"><div class="lc-tags"><span class="t t-id">XC3</span><span class="t t-time">3s</span><span class="t t-es">es</span><span class="t t-cam">on cam</span></div><div class="lc-text">"Toca el link abajo. 30 segundos. Te llamo hoy."</div></div></div>
+</div>
+
+<button class="reset" onclick="resetAll()">Reset All</button>
+</div>
+
+<!-- ===================== BUILD GUIDE ===================== -->
+<div class="page" id="page-combos">
+
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#fff"></div><div class="sec-name">Ad Formulas from Creative Brief</div></div>
+  <div class="sec-note">These match the exact structure from the creative brief. Hook → Identity → Work → Close. Every ad 20-25 sec MAX. Cut every 2-3 seconds. Iron is the hero. Captions on everything.</div>
+
+  <div class="combo">
+    <div class="combo-title">Ad 1 — Testimonial (15-20 sec)</div>
+    <div class="combo-sub">Customer soundbite is the hook. Juan wraps it.</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ef4444">HOOK</span><span class="combo-a">&rarr;</span> Best customer soundbite OR H1, H2, H5</div>
+    <div class="combo-r"><span class="combo-s" style="background:#fff;color:#000">PROOF</span><span class="combo-a">&rarr;</span> Customer clip + iron fence beauty shots (5-10s)</div>
+    <div class="combo-r"><span class="combo-s" style="background:#22c55e">STACK</span><span class="combo-a">&rarr;</span> S1 + S3 as text overlays on best footage</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ec4899">CTA</span><span class="combo-a">&rarr;</span> C1 or C3 (Juan back on camera)</div>
+  </div>
+
+  <div class="combo">
+    <div class="combo-title">Ad 2 — Walkthrough (20-25 sec)</div>
+    <div class="combo-sub">Juan to camera. B-roll of iron work intercut every 2-3 sec.</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ef4444">HOOK</span><span class="combo-a">&rarr;</span> H1, H3, H4, H5, or H8 (3 sec, on cam)</div>
+    <div class="combo-r"><span class="combo-s" style="background:#e8a317">IDENTITY</span><span class="combo-a">&rarr;</span> I1 or I3 (5-7 sec, cut to welding)</div>
+    <div class="combo-r"><span class="combo-s" style="background:#3b82f6">WORK</span><span class="combo-a">&rarr;</span> W1 or W2 + W3 (8-10 sec, build footage)</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ec4899">CLOSE</span><span class="combo-a">&rarr;</span> C1 or C3 (3-5 sec, on cam)</div>
+  </div>
+
+  <div class="combo">
+    <div class="combo-title">Short Reel (15 sec)</div>
+    <div class="combo-sub">Quick hit for Stories / Reels / fast scroll.</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ef4444">HOOK</span><span class="combo-a">&rarr;</span> H2, H5, H8, or H10</div>
+    <div class="combo-r"><span class="combo-s" style="background:#e8a317">IDENTITY</span><span class="combo-a">&rarr;</span> I1 (shortened)</div>
+    <div class="combo-r"><span class="combo-s" style="background:#22c55e">STACK</span><span class="combo-a">&rarr;</span> S1 + S3 (overlays)</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ec4899">CTA</span><span class="combo-a">&rarr;</span> C3</div>
+  </div>
+
+  <div class="combo">
+    <div class="combo-title">Spanish Version</div>
+    <div class="combo-sub">Same formula, full Spanish. Month 2 expansion.</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ef4444">HOOK</span><span class="combo-a">&rarr;</span> H11 or H12</div>
+    <div class="combo-r"><span class="combo-s" style="background:#e8a317">IDENTITY</span><span class="combo-a">&rarr;</span> I5</div>
+    <div class="combo-r"><span class="combo-s" style="background:#3b82f6">WORK</span><span class="combo-a">&rarr;</span> W8</div>
+    <div class="combo-r"><span class="combo-s" style="background:#ec4899">CTA</span><span class="combo-a">&rarr;</span> C5</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="sec">
+  <div class="sec-label"><div class="sec-dot" style="background:#e8a317"></div><div class="sec-name">Editing Rules (From Creative Brief)</div></div>
+
+  <div class="combo">
+    <div class="combo-title">Non-Negotiables</div>
+    <div class="combo-sub">Break these and the ad underperforms.</div>
+    <div class="combo-r" style="color:#aaa">Captions on every spoken word — 85% watch on mute</div>
+    <div class="combo-r" style="color:#aaa">Frame 1 = motion or face talking. No slow intros. No logos.</div>
+    <div class="combo-r" style="color:#aaa">Cut every 2-3 sec. If one shot sits for 4+ sec, you lose people.</div>
+    <div class="combo-r" style="color:#aaa">Iron fences are the hero. Best footage = iron close-ups, welds, gates.</div>
+    <div class="combo-r" style="color:#aaa">Raw over polished. Shaky is fine. Authentic converts. Corporate kills trust.</div>
+    <div class="combo-r" style="color:#aaa">Export 1080x1080 (feed) + 1080x1920 (stories) for every video.</div>
+  </div>
+
+  <div class="combo">
+    <div class="combo-title">Required Overlays</div>
+    <div class="combo-sub">Place naturally. Max 2 on screen at once.</div>
+    <div class="combo-r" style="color:#e8a317">FREE Same-Day Estimate — during offer section</div>
+    <div class="combo-r" style="color:#e8a317">1-Year Warranty — during offer section</div>
+    <div class="combo-r" style="color:#e8a317">Custom Iron & Ornamental — during offer section</div>
+    <div class="combo-r" style="color:#e8a317">Only 4-5 Spots This Month — closing moment</div>
+    <div class="combo-r" style="color:#e8a317">Se Habla Espanol — last 3 seconds</div>
+    <div class="combo-r" style="color:#e8a317">Houston, TX — first 5 seconds</div>
+  </div>
+</div>
+</div>
+
+<!-- FAB + DRAWER -->
+<div class="fab-lbl" id="fabLbl">Visuals</div>
+<button class="fab" onclick="openD()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></button>
+
+<div class="overlay" id="ov" onclick="closeD()"></div>
+<div class="drawer" id="dr">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title">Visual Hooks</div>
+  <div class="drawer-desc">How Juan moves while saying each line. Pick one, pair with a script, film. Switch visual = new ad from same script.</div>
+
+  <div class="drawer-sub">Walk + Talk</div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Walking toward camera from a fence</div><div class="vc-sub">Start 10ft back. Authority walk-up. Camera low.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Walking along the fence, hand on iron</div><div class="vc-sub">Camera follows beside. Shows craftsmanship.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Walking onto property like an estimate arrival</div><div class="vc-sub">Truck behind him. Simulates customer experience.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Walking away then turning back to camera</div><div class="vc-sub">Turn and deliver. Pattern interrupt visual.</div></div></div>
+
+  <div class="drawer-sub">Standing</div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">In front of finished iron fence</div><div class="vc-sub">Hero shot. Best fence behind him. Medium waist-up.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Leaning on the iron fence casually</div><div class="vc-sub">Relaxed energy. Approachable.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Tight close-up on face</div><div class="vc-sub">Intimate. High trust. Good for pain hooks.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Wide shot — house + iron fence + Juan small</div><div class="vc-sub">Fence is the hero. Dream outcome visual.</div></div></div>
+
+  <div class="drawer-sub">Action</div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Measuring post, looks up and talks</div><div class="vc-sub">Mid-action hook. Was working, now talking to you.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Lifts welding mask, starts talking</div><div class="vc-sub">The mask lift IS the visual hook. Sparks visible.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Opens an iron gate he just built</div><div class="vc-sub">Product reveal. Gate swings open. Satisfying.</div></div></div>
+  <div class="vc" onclick="this.classList.toggle('vd');saveV()"><div class="vr"></div><div><div class="vc-text">Pointing at iron details while explaining</div><div class="vc-sub">Educational energy. Shows craft knowledge.</div></div></div>
+</div>
+
+</div>
+
+<script>
+function switchTab(page,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById('page-'+page).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function tog(c){c.classList.toggle('done');updProg();saveS()}
+
+function updProg(){
+  var main=document.querySelectorAll('#page-main .lc');
+  var bank=document.querySelectorAll('#page-bank .lc');
+  var mDone=document.querySelectorAll('#page-main .lc.done').length;
+  var bDone=document.querySelectorAll('#page-bank .lc.done').length;
+  var total=main.length+bank.length;
+  var done=mDone+bDone;
+  var pct=Math.round((done/total)*100);
+  var rem=total-done;
+  document.getElementById('pNum').innerHTML=done+'<span> / '+total+'</span>';
+  document.getElementById('pFill').style.width=pct+'%';
+  document.getElementById('pTime').textContent=rem===0?'Done':'~'+Math.round(rem*1.1)+' min';
+}
+
+function openD(){document.getElementById('dr').classList.add('open');document.getElementById('ov').classList.add('open');document.getElementById('fabLbl').classList.add('hid')}
+function closeD(){document.getElementById('dr').classList.remove('open');document.getElementById('ov').classList.remove('open');setTimeout(function(){document.getElementById('fabLbl').classList.remove('hid')},300)}
+
+function saveS(){
+  var all=document.querySelectorAll('.lc');var s=[];
+  all.forEach(function(c){s.push(c.classList.contains('done'))});
+  localStorage.setItem('jn_v8',JSON.stringify(s));
+}
+function saveV(){
+  var all=document.querySelectorAll('.vc');var s=[];
+  all.forEach(function(c){s.push(c.classList.contains('vd'))});
+  localStorage.setItem('jn_v8v',JSON.stringify(s));
+}
+function loadS(){
+  var d=localStorage.getItem('jn_v8');
+  if(d){var s=JSON.parse(d);var all=document.querySelectorAll('.lc');s.forEach(function(v,i){if(v&&all[i])all[i].classList.add('done')})}
+  var dv=localStorage.getItem('jn_v8v');
+  if(dv){var sv=JSON.parse(dv);var allv=document.querySelectorAll('.vc');sv.forEach(function(v,i){if(v&&allv[i])allv[i].classList.add('vd')})}
+  updProg();
+}
+function resetAll(){if(confirm('Reset all?')){document.querySelectorAll('.lc.done').forEach(function(c){c.classList.remove('done')});document.querySelectorAll('.vc.vd').forEach(function(c){c.classList.remove('vd')});updProg();saveS();saveV()}}
+
+setTimeout(function(){document.getElementById('fabLbl').classList.add('hid')},4000);
+loadS();
+</script>
+
+</body>
+</html>
